@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "top_procs"
+name = "toprss"
 version = "0.1.0"
