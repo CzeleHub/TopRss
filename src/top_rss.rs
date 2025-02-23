@@ -72,6 +72,7 @@ pub fn toprss(merge: bool, layout: Layout, number_of_processes: Print, unit: Uni
                     }
                 })
                 .collect::<Vec<Process>>();
+
             let mut combined: HashMap<String, (usize, &mut Process)> = HashMap::new();
             procs.iter_mut().for_each(|p| {
                 if combined.contains_key(&p.name) {
@@ -160,12 +161,26 @@ pub enum Unit {
     GB,
 }
 
-impl Unit {
-    fn convert(&self, rss: kB) -> usize {
+enum Number {
+    Usize(usize),
+    Float(f32),
+}
+
+impl std::fmt::Display for Number {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Unit::kB => rss.kB,
-            Unit::MB => rss.kB / 1024,
-            Unit::GB => rss.kB / 1024 / 1024,
+            Number::Usize(u) => f.write_str(&u.to_string()),
+            Number::Float(float) => f.write_str(&float.to_string()),
+        }
+    }
+}
+
+impl Unit {
+    fn convert(&self, rss: kB) -> Number {
+        match self {
+            Unit::kB => Number::Usize(rss.kB),
+            Unit::MB => Number::Usize(rss.kB / 1024),
+            Unit::GB => Number::Float((rss.kB as f32 / 1024. / 1024. * 100.).trunc() / 100.),
         }
     }
 }
