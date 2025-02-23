@@ -1,13 +1,18 @@
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License version 2
-// as published by the Free Software Foundation.
+//     This program is free software: you can redistribute it and/or modify
+//     it under the terms of the GNU Lesser General Public License as published by
+//     the Free Software Foundation, version 3 of the License.
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+//     This program is distributed in the hope that it will be useful,
+//     but WITHOUT ANY WARRANTY; without even the implied warranty of
+//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//     GNU Lesser General Public License for more details.
+
+//     You should have received a copy of the GNU Lesser General Public License
+//     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::VecDeque;
+
+use top_rss::{Layout, Print, Unit};
 
 mod top_rss;
 
@@ -15,10 +20,10 @@ const VERSION: &str = "0.1";
 
 fn main() {
     let mut args: VecDeque<String> = std::env::args().collect();
-    let mut merge = false;
-    let mut number_option: Option<usize> = Some(2);
-    let mut horizontal_layout = true;
-    let mut all_processes = false;
+    let mut merge_same_name: bool = true;
+    let mut number_of_processes: Print = Print::Top(3);
+    let mut layout: Layout = Layout::Line;
+    let mut unit: Unit = Unit::MB;
 
     let _self = args.pop_front();
 
@@ -34,14 +39,14 @@ fn main() {
                 println!("TopRSS version: {VERSION}");
                 return;
             }
-            "-m" | "--merge" => {
-                merge = true;
+            "u" | "--unmerge" => {
+                merge_same_name = false;
             }
-            "-n" | "--number" => {
+            "-n" => {
                 let expected_number = args_iter.next();
                 if let Some(number) = expected_number {
                     match number.parse::<usize>() {
-                        Ok(n) => number_option = Some(n),
+                        Ok(n) => number_of_processes = Print::Top(n),
                         Err(_) => {
                             eprintln!("Error: Could not parse '{number}' into number");
                             return;
@@ -52,12 +57,24 @@ fn main() {
                     return;
                 }
             }
-            "--vertical" => {
-                horizontal_layout = false;
+            "--lines" => {
+                layout = Layout::Lines;
             }
 
             "-a" | "--all" => {
-                all_processes = true;
+                number_of_processes = Print::All;
+            }
+
+            "--kb" => {
+                unit = Unit::kB;
+            }
+
+            "--mb" => {
+                unit = Unit::MB;
+            }
+
+            "--gb" => {
+                unit = Unit::GB;
             }
             _ => {
                 eprintln!("Error: Unknown argument '{arg}'");
@@ -66,7 +83,7 @@ fn main() {
         }
     }
 
-    top_rss::toprss(merge, horizontal_layout, all_processes, number_option);
+    top_rss::toprss(merge_same_name, layout, number_of_processes, unit);
 }
 
 fn help() {
@@ -80,12 +97,15 @@ TopRSS version: {VERSION}
 Command line utility for printing top VmRSS processes
 
 options:
-  -h, --help            display this help message and exit
-  -v, --version         display program's version number and exit
-  -m, --merge           merge processes with the same name
-  -n, --number          display at most top 'n' processes
-  -a, --all             display all processes
-  -c, --color           color the output
+  -h, --help, -H, -?        display this help message and exit
+  -v, --version             display program's version and exit
+  -u, --unmerge             unmerge processes with the same name
+  -n,                       display at most top 'n' processes
+  -a, --all                 display all processes
+  -l, --lines               display each process on separate line
+      --kb                  display VmRSS usage in kB
+      --mb                  display VmRSS usage in MB 
+      --gb                  display VmRSS usage in GB
 
     "#
     )

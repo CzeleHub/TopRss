@@ -1,20 +1,18 @@
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License version 2
-// as published by the Free Software Foundation.
+//     This program is free software: you can redistribute it and/or modify
+//     it under the terms of the GNU Lesser General Public License as published by
+//     the Free Software Foundation, version 3 of the License.
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+//     This program is distributed in the hope that it will be useful,
+//     but WITHOUT ANY WARRANTY; without even the implied warranty of
+//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//     GNU Lesser General Public License for more details.
+
+//     You should have received a copy of the GNU Lesser General Public License
+//     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::{collections::HashMap, path::PathBuf};
 
-pub fn toprss(
-    merge: bool,
-    horizontal_layout: bool,
-    all_processes: bool,
-    n_processes: Option<usize>,
-) {
+pub fn toprss(merge: bool, layout: Layout, number_of_processes: Print, unit: Unit) {
     let path = PathBuf::from("/proc");
     match std::fs::read_dir(&path) {
         Ok(proc) => {
@@ -47,7 +45,7 @@ pub fn toprss(
                                                             .parse::<usize>()
                                                             .unwrap(),
                                                     },
-                                                    unit: Unit::Mb,
+                                                    unit,
                                                 })
                                             } else {
                                                 None
@@ -97,39 +95,39 @@ pub fn toprss(
             let procs = procs.into_iter().rev();
             let procs = procs.into_iter().collect::<Vec<(usize, Process)>>();
 
-            if all_processes {
-                procs
-                    //.collect::<Vec<Process>>()
-                    .iter()
-                    .for_each(|p| {
-                        if p.0 == 1 {
-                            print!("{} ", p.1)
-                        } else {
-                            print!("[{}]{} ", p.0, p.1)
-                        }
-                    });
-                println!();
-            } else {
-                procs
-                    .iter()
-                    .take(n_processes.unwrap_or(3))
-                    //.collect::<Vec<Process>>()
-                    //.iter()
-                    .for_each(|p| {
-                        if p.0 == 1 {
-                            print!("{} ", p.1)
-                        } else {
-                            print!("[{}]{} ", p.0, p.1)
-                        }
-                    });
-                println!();
-            }
+            display_processes(procs, number_of_processes, layout);
         }
         Err(err) => {
             eprintln!("ERROR: {}", err);
         }
     };
 }
+
+fn display_processes(collection: Vec<(usize, Process)>, print: Print, layout: Layout) {
+    match print {
+        Print::All => {
+            collection.iter().for_each(|p| {
+                if p.0 == 1 {
+                    print!("{} ", p.1)
+                } else {
+                    print!("[{}]{} ", p.0, p.1)
+                }
+            });
+            println!();
+        }
+        Print::Top(n) => {
+            collection.iter().take(n).for_each(|p| {
+                if p.0 == 1 {
+                    print!("{} ", p.1)
+                } else {
+                    print!("[{}]{} ", p.0, p.1)
+                }
+            });
+            println!();
+        }
+    }
+}
+
 #[derive(Clone)]
 struct Process {
     name: String,
@@ -161,17 +159,19 @@ impl std::iter::Sum<usize> for kB {
         iter.sum()
     }
 }
-#[derive(Clone)]
-enum Unit {
-    Mb,
-    Gb,
+#[derive(Clone, Copy)]
+pub enum Unit {
+    kB,
+    MB,
+    GB,
 }
 
 impl Unit {
     fn convert(&self, rss: kB) -> usize {
         match self {
-            Unit::Mb => rss.kB / 1024,
-            Unit::Gb => rss.kB / 1024 / 1024,
+            Unit::kB => rss.kB,
+            Unit::MB => rss.kB / 1024,
+            Unit::GB => rss.kB / 1024 / 1024,
         }
     }
 }
@@ -179,8 +179,19 @@ impl Unit {
 impl std::fmt::Display for Unit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Unit::Mb => f.write_str("MB"),
-            Unit::Gb => f.write_str("GB"),
+            Unit::kB => f.write_str("kB"),
+            Unit::MB => f.write_str("MB"),
+            Unit::GB => f.write_str("GB"),
         }
     }
+}
+
+pub enum Layout {
+    Lines,
+    Line,
+}
+
+pub enum Print {
+    All,
+    Top(usize),
 }
