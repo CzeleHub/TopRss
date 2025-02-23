@@ -37,11 +37,9 @@ pub fn toprss(merge: bool, layout: Layout, number_of_processes: Print, unit: Uni
                                                     rss: kB {
                                                         kB: rss
                                                             .to_owned()
-                                                            .split_off(7)
-                                                            .strip_suffix(" kB")
+                                                            .split_whitespace()
+                                                            .nth(1)
                                                             .unwrap()
-                                                            .replace(" ", "")
-                                                            .to_owned()
                                                             .parse::<usize>()
                                                             .unwrap(),
                                                     },
@@ -107,22 +105,16 @@ fn display_processes(collection: Vec<(usize, Process)>, print: Print, layout: La
     match print {
         Print::All => {
             collection.iter().for_each(|p| {
-                if p.0 == 1 {
+                if matches!(layout, Layout::Line) {
                     print!("{} ", p.1)
                 } else {
-                    print!("[{}]{} ", p.0, p.1)
+                    println!("{}", p.1)
                 }
             });
             println!();
         }
         Print::Top(n) => {
-            collection.iter().take(n).for_each(|p| {
-                if p.0 == 1 {
-                    print!("{} ", p.1)
-                } else {
-                    print!("[{}]{} ", p.0, p.1)
-                }
-            });
+            collection.iter().take(n).for_each(|p| print!("{} ", p.1));
             println!();
         }
     }
@@ -150,6 +142,7 @@ impl std::fmt::Display for Process {
 }
 
 #[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
 #[derive(Clone, Copy)]
 struct kB {
     kB: usize,
@@ -159,6 +152,7 @@ impl std::iter::Sum<usize> for kB {
         iter.sum()
     }
 }
+#[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 pub enum Unit {
     kB,
