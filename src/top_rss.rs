@@ -12,11 +12,11 @@
 
 use std::{collections::HashMap, path::PathBuf};
 
-pub fn toprss(merge: bool, layout: Layout, number_of_processes: Print, unit: Unit) {
+pub fn toprss(merge: bool, layout: Layout, how_many: HowMany, unit: Unit) {
     let path = PathBuf::from("/proc");
     match std::fs::read_dir(&path) {
         Ok(proc) => {
-            let mut procs = proc
+            let procs = proc
                 .filter_map(|result| match result {
                     Ok(dir_entry) => match dir_entry.file_type() {
                         Ok(ftype) => {
@@ -73,28 +73,31 @@ pub fn toprss(merge: bool, layout: Layout, number_of_processes: Print, unit: Uni
                 })
                 .collect::<Vec<Process>>();
 
-            let mut combined: HashMap<String, (usize, &mut Process)> = HashMap::new();
-            procs.iter_mut().for_each(|p| {
-                if combined.contains_key(&p.name) {
-                    combined.get_mut(&p.name).unwrap().0 += 1;
-                    combined.get_mut(&p.name).unwrap().1.rss.kB += p.rss.kB;
+            let mut combined: HashMap<String, (u32, Process)> = HashMap::new();
+            let procs_iter = procs.into_iter();
+            for p in procs_iter {
+                if let Some(item) = combined.get_mut(p.name.as_str()) {
+                    item.0 += 1;
+                    item.1.rss.kB += p.rss.kB;
                 } else {
                     combined.insert(p.name.clone(), (1, p));
                 }
-            });
+            }
+            // procs.into_iter().for_each(|p| {
+
+            // });
 
             let mut procs = combined
-                .values()
-                .map(|v| (v.0, (*(v.1)).clone()))
-                .collect::<Vec<(usize, Process)>>();
+                .into_values()
+                .map(|v| (v.0, v.1))
+                .collect::<Vec<(u32, Process)>>();
 
             //procs.sort_by(|p1, p2| p1.name.cmp(&p2.name));
             procs.sort_by(|p1, p2| p1.1.rss.kB.cmp(&p2.1.rss.kB));
 
-            let procs = procs.into_iter().rev();
-            let procs = procs.into_iter().collect::<Vec<(usize, Process)>>();
+            let procs = procs.into_iter().rev().collect::<Vec<(u32, Process)>>();
 
-            display_processes(procs, number_of_processes, layout);
+            display_processes(procs, how_many, layout);
         }
         Err(err) => {
             eprintln!("ERROR: {}", err);
@@ -102,9 +105,9 @@ pub fn toprss(merge: bool, layout: Layout, number_of_processes: Print, unit: Uni
     };
 }
 
-fn display_processes(collection: Vec<(usize, Process)>, print: Print, layout: Layout) {
+fn display_processes(collection: Vec<(u32, Process)>, print: HowMany, layout: Layout) {
     match print {
-        Print::All => {
+        HowMany::All => {
             collection.iter().for_each(|p| {
                 if matches!(layout, Layout::Line) {
                     print!("{} ", p.1)
@@ -112,11 +115,21 @@ fn display_processes(collection: Vec<(usize, Process)>, print: Print, layout: La
                     println!("{}", p.1)
                 }
             });
-            println!();
+            if matches!(layout, Layout::Line) {
+                println!()
+            }
         }
-        Print::Top(n) => {
-            collection.iter().take(n).for_each(|p| print!("{} ", p.1));
-            println!();
+        HowMany::Top(n) => {
+            collection.iter().take(n).for_each(|p| {
+                if matches!(layout, Layout::Line) {
+                    print!("{} ", p.1)
+                } else {
+                    println!("{}", p.1)
+                }
+            });
+            if matches!(layout, Layout::Line) {
+                println!()
+            }
         }
     }
 }
@@ -200,7 +213,7 @@ pub enum Layout {
     Line,
 }
 
-pub enum Print {
+pub enum HowMany {
     All,
     Top(usize),
 }

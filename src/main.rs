@@ -12,7 +12,7 @@
 
 use std::collections::VecDeque;
 
-use top_rss::{Layout, Print, Unit};
+use top_rss::{HowMany, Layout, Unit};
 
 mod top_rss;
 
@@ -20,8 +20,8 @@ const VERSION: &str = "0.1";
 
 fn main() {
     let mut args: VecDeque<String> = std::env::args().collect();
-    let mut merge_same_name: bool = true;
-    let mut number_of_processes: Print = Print::Top(3);
+    let mut group_same_name: bool = true;
+    let mut how_many: HowMany = HowMany::Top(3);
     let mut layout: Layout = Layout::Line;
     let mut unit: Unit = Unit::MB;
 
@@ -40,13 +40,13 @@ fn main() {
                 return;
             }
             "u" | "--unmerge" => {
-                merge_same_name = false;
+                group_same_name = false;
             }
             "-n" => {
                 let expected_number = args_iter.next();
                 if let Some(number) = expected_number {
                     match number.parse::<usize>() {
-                        Ok(n) => number_of_processes = Print::Top(n),
+                        Ok(n) => how_many = HowMany::Top(n),
                         Err(_) => {
                             eprintln!("Error: Could not parse '{number}' into number");
                             return;
@@ -62,7 +62,7 @@ fn main() {
             }
 
             "-a" | "--all" => {
-                number_of_processes = Print::All;
+                how_many = HowMany::All;
             }
 
             "--kb" => {
@@ -83,7 +83,11 @@ fn main() {
         }
     }
 
-    top_rss::toprss(merge_same_name, layout, number_of_processes, unit);
+    if matches!(how_many, HowMany::Top(0)) {
+        return;
+    }
+
+    top_rss::toprss(group_same_name, layout, how_many, unit);
 }
 
 fn help() {
@@ -97,15 +101,17 @@ TopRSS version: {VERSION}
 Command line utility for printing top VmRSS processes
 
 options:
-  -h, --help, -H, -?        display this help message and exit
-  -v, --version             display program's version and exit
-  -u, --unmerge             unmerge processes with the same name
-  -n,                       display at most top 'n' processes
-  -a, --all                 display all processes
-  -l, --lines               display each process on separate line
-      --kb                  display VmRSS usage in kB
-      --mb                  display VmRSS usage in MB 
-      --gb                  display VmRSS usage in GB
+  -h, --help, -H, -?                 display this help message and exit
+  -v, --version                      display program's version and exit
+  -g, --group        DEFAULT         ungroup processes with the same name //to be implemented
+  -u, --ungroup                      ungroup processes with the same name //to be implemented
+  -n,                DEFAULT n = 3   display at most top 'n' processes
+  -a, --all                          display all processes
+  -o, --line         DEFAULT         display processes in one line 
+  -l, --lines                        display each process on separate line
+      --kb                           display VmRSS usage in kB
+      --mb           DEFAULT         display VmRSS usage in MB
+      --gb                           display VmRSS usage in GB
 
     "#
     )
