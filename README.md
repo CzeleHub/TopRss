@@ -10,11 +10,17 @@ As of right now, simply running **toprss** (in terminal) without any options giv
 `Isolated Web Co: 2465 MB codium: 1507 MB firefox: 1130 MB` 
 
 By default it prints 3 top VmRSS consuming processes from /proc directory in MB.
+
 Well, the above sentence is actually a lie!!!
+
 To be technically correct, the best kind of correct,
+
 what really happens is that by default **toprss**
+
 goes through all processes that are in the /proc directory,
+
 the keeps the ones that have both name and VmRSS information in status file,
+
 and then groups all processes with the same name.
 
 There is going to be an option to ungroup those in the future
@@ -52,6 +58,14 @@ cargo build --release
 ```
 
 You can now run it. just go to target/release and run toprss
+
+# Future plans
+todo:
+ - add ungroup option (does not group processes with the same name)
+ - add intelligent option (displays usage in appropriate unit based on individual process VmRSS size)
+ - add option to color the output
+ - add options to customize coloring, color diffrent parts of the output, color based on some conditions
+ - add option to print a separator between each printed process
 
 ## In case of any problems..
 
