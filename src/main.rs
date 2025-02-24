@@ -12,7 +12,7 @@
 
 use std::collections::VecDeque;
 
-use top_rss::{HowMany, Layout, Unit};
+use top_rss::{Layout, Unit};
 
 mod top_rss;
 
@@ -21,7 +21,7 @@ const VERSION: &str = "0.1";
 fn main() {
     let mut args: VecDeque<String> = std::env::args().collect();
     let mut group_same_name: bool = true;
-    let mut how_many: HowMany = HowMany::Top(3);
+    let mut how_many: usize = 3;
     let mut layout: Layout = Layout::Line;
     let mut unit: Unit = Unit::MB;
 
@@ -46,9 +46,9 @@ fn main() {
                 let expected_number = args_iter.next();
                 if let Some(number) = expected_number {
                     match number.parse::<usize>() {
-                        Ok(n) => how_many = HowMany::Top(n),
+                        Ok(n) => how_many = n,
                         Err(_) => {
-                            eprintln!("Error: Could not parse '{number}' into number");
+                            eprintln!("Error: Could not parse '{number}' into unsigned integer");
                             return;
                         }
                     }
@@ -62,7 +62,7 @@ fn main() {
             }
 
             "-a" | "--all" => {
-                how_many = HowMany::All;
+                how_many = usize::MAX;
             }
 
             "--kb" => {
@@ -83,7 +83,7 @@ fn main() {
         }
     }
 
-    if matches!(how_many, HowMany::Top(0)) {
+    if how_many == 0 {
         return;
     }
 

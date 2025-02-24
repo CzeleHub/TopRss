@@ -10,68 +10,13 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fs::ReadDir, path::PathBuf};
 
-pub fn toprss(merge: bool, layout: Layout, how_many: HowMany, unit: Unit) {
+pub fn toprss(merge: bool, layout: Layout, how_many: usize, unit: Unit) {
     let path = PathBuf::from("/proc");
     match std::fs::read_dir(&path) {
         Ok(proc) => {
-            let procs = proc
-                .filter_map(|result| match result {
-                    Ok(dir_entry) => match dir_entry.file_type() {
-                        Ok(ftype) => {
-                            if ftype.is_dir() | ftype.is_symlink() {
-                                let status = dir_entry.path().join("status");
-                                if status.exists() {
-                                    match std::fs::read_to_string(status) {
-                                        Ok(content) => {
-                                            let name_option = content
-                                                .lines()
-                                                .find(|line| line.starts_with("Name:"));
-                                            let rss_option = content
-                                                .lines()
-                                                .find(|line| line.starts_with("VmRSS:"));
-                                            if let Some(name) = name_option {
-                                                rss_option.map(|rss| Process {
-                                                    name: name.to_owned().split_off(6),
-                                                    rss: kB {
-                                                        kB: rss
-                                                            .to_owned()
-                                                            .split_whitespace()
-                                                            .nth(1)
-                                                            .unwrap()
-                                                            .parse::<usize>()
-                                                            .unwrap(),
-                                                    },
-                                                    unit,
-                                                })
-                                            } else {
-                                                None
-                                            }
-                                        }
-                                        Err(err) => {
-                                            eprintln!("ERROR: {}", err);
-                                            None
-                                        }
-                                    }
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        }
-                        Err(err) => {
-                            eprintln!("ERROR: {}", err);
-                            None
-                        }
-                    },
-                    Err(err) => {
-                        eprintln!("ERROR: {}", err);
-                        None
-                    }
-                })
-                .collect::<Vec<Process>>();
+            let procs = get_processes(proc, unit);
 
             let mut combined: HashMap<String, (u32, Process)> = HashMap::new();
             let procs_iter = procs.into_iter();
@@ -83,16 +28,12 @@ pub fn toprss(merge: bool, layout: Layout, how_many: HowMany, unit: Unit) {
                     combined.insert(p.name.clone(), (1, p));
                 }
             }
-            // procs.into_iter().for_each(|p| {
-
-            // });
 
             let mut procs = combined
                 .into_values()
                 .map(|v| (v.0, v.1))
                 .collect::<Vec<(u32, Process)>>();
 
-            //procs.sort_by(|p1, p2| p1.name.cmp(&p2.name));
             procs.sort_by(|p1, p2| p1.1.rss.kB.cmp(&p2.1.rss.kB));
 
             let procs = procs.into_iter().rev().collect::<Vec<(u32, Process)>>();
@@ -105,32 +46,69 @@ pub fn toprss(merge: bool, layout: Layout, how_many: HowMany, unit: Unit) {
     };
 }
 
-fn display_processes(collection: Vec<(u32, Process)>, print: HowMany, layout: Layout) {
-    match print {
-        HowMany::All => {
-            collection.iter().for_each(|p| {
-                if matches!(layout, Layout::Line) {
-                    print!("{} ", p.1)
+fn get_processes(dir: ReadDir, unit: Unit) -> Vec<Process> {
+    dir.filter_map(|result| match result {
+        Ok(dir_entry) => match dir_entry.file_type() {
+            Ok(ftype) => {
+                if ftype.is_dir() | ftype.is_symlink() {
+                    let status = dir_entry.path().join("status");
+                    if status.exists() {
+                        match std::fs::read_to_string(status) {
+                            Ok(content) => try_new_process(content, unit),
+                            Err(err) => {
+                                eprintln!("ERROR: {}", err);
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    }
                 } else {
-                    println!("{}", p.1)
+                    None
                 }
-            });
-            if matches!(layout, Layout::Line) {
-                println!()
             }
-        }
-        HowMany::Top(n) => {
-            collection.iter().take(n).for_each(|p| {
-                if matches!(layout, Layout::Line) {
-                    print!("{} ", p.1)
-                } else {
-                    println!("{}", p.1)
-                }
-            });
-            if matches!(layout, Layout::Line) {
-                println!()
+            Err(err) => {
+                eprintln!("ERROR: {}", err);
+                None
             }
+        },
+        Err(err) => {
+            eprintln!("ERROR: {}", err);
+            None
         }
+    })
+    .collect::<Vec<Process>>()
+}
+
+fn try_new_process(content: String, unit: Unit) -> Option<Process> {
+    let name_option = content.lines().find(|line| line.starts_with("Name:"));
+    let rss_option = content.lines().find(|line| line.starts_with("VmRSS:"));
+    if let Some(name) = name_option {
+        rss_option.map(|rss| Process {
+            name: name.to_owned().split_off(6),
+            rss: kB {
+                kB: rss
+                    .to_owned()
+                    .split_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .parse::<usize>()
+                    .unwrap(),
+            },
+            unit,
+        })
+    } else {
+        None
+    }
+}
+
+fn display_processes(collection: Vec<(u32, Process)>, how_many: usize, layout: Layout) {
+    collection.iter().take(how_many).for_each(|p| match layout {
+        Layout::Lines => println!("{}", p.1),
+        Layout::Line => print!("{} ", p.1),
+    });
+    if matches!(layout, Layout::Line) {
+        println!()
     }
 }
 
@@ -211,9 +189,4 @@ impl std::fmt::Display for Unit {
 pub enum Layout {
     Lines,
     Line,
-}
-
-pub enum HowMany {
-    All,
-    Top(usize),
 }
