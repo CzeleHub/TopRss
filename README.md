@@ -10,14 +10,16 @@ There is no official release yet
 
 To compile (on linux) follow these steps:
 1. [install rust](https://www.rust-lang.org/tools/install)
-2.
+2. Clone the repository
 ```
 git clone https://github.com/CzeleHub/TopRss.git
 ```
-3.
+3. Compile
 ```
 cargo build --release
 ```
+
+You can now run it. just go to target/release and run toprss
 
 ## In case of any problems..
 
