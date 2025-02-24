@@ -10,8 +10,14 @@ There is no official release yet
 
 To compile (on linux) follow these steps:
 1. [install rust](https://www.rust-lang.org/tools/install)
-2. $:`git clone https://github.com/CzeleHub/TopRss.git`
-3. $:`cargo build --release`
+2.
+```
+git clone https://github.com/CzeleHub/TopRss.git
+```
+3.
+```
+cargo build --release
+```
 
 ## In case of any problems..
 
