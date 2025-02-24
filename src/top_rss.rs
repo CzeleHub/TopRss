@@ -12,7 +12,7 @@
 
 use std::{collections::HashMap, fs::ReadDir, path::PathBuf};
 
-pub fn toprss(merge: bool, layout: Layout, how_many: usize, unit: Unit) {
+pub fn toprss(_ungroup: bool, layout: Layout, how_many: usize, unit: Unit) {
     let path = PathBuf::from("/proc");
     match std::fs::read_dir(&path) {
         Ok(proc) => {

@@ -19,7 +19,7 @@ what really happens is that by default **toprss**
 
 goes through all processes that are in the /proc directory,
 
-the keeps the ones that have both name and VmRSS information in status file,
+then keeps the ones that have both name and VmRSS information in status file,
 
 and then groups all processes with the same name.
 
@@ -41,7 +41,7 @@ options:
       --gb                           display VmRSS usage in GB
 ```
 
-Since this program is still not officially released with 1.0 version, all those options and the way they work might be a subject to change
+Since this program is still not officially released with 1.0 version, ***all those options and the way they work might be a subject to change***
 
 There is no official release yet.
 To try it for yourself check the installation section below!
