@@ -27,6 +27,7 @@ There is going to be an option to ungroup those in the future
 if You wish to use that, although **I** don't find it useful in my usecase.
 
 Currently **toprss** has this options (You can also see them by running `toprss --help`)
+`
 options:
   -h, --help, -H, -?                 display this help message and exit
   -v, --version                      display program's version and exit
@@ -38,6 +39,7 @@ options:
       --kb                           display VmRSS usage in kB
       --mb           DEFAULT         display VmRSS usage in MB
       --gb                           display VmRSS usage in GB
+`
 
 Since this program is still not officially released with 1.0 version, all those options and the way they work might be a subject to change
 
