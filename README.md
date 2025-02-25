@@ -32,6 +32,7 @@ options:
   -h, --help, -H, -?                 display this help message and exit
   -v, --version                      display program's version and exit
   -g, --group        DEFAULT         group processes with the same name
+      --group-count                  display how many processes are in a given group
   -n,                DEFAULT n = 3   display at most top 'n' processes
   -a, --all                          display all processes
   -o, --line         DEFAULT         display processes in one line 

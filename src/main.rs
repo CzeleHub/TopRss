@@ -24,6 +24,7 @@ fn main() {
     let mut how_many: usize = 3;
     let mut layout: Layout = Layout::Line;
     let mut unit: Unit = Unit::MB;
+    let mut show_group_count: bool = false;
 
     let _self = args.pop_front();
 
@@ -66,6 +67,10 @@ fn main() {
                 how_many = usize::MAX;
             }
 
+            "--group-count" => {
+                show_group_count = true;
+            }
+
             "--kb" => {
                 unit = Unit::kB;
             }
@@ -88,7 +93,7 @@ fn main() {
         return;
     }
 
-    top_rss::toprss(group_same_name, layout, how_many, unit);
+    top_rss::toprss(group_same_name, show_group_count, layout, how_many, unit);
 }
 
 fn help() {
@@ -105,6 +110,7 @@ options:
   -h, --help, -H, -?                 display this help message and exit
   -v, --version                      display program's version and exit
   -g, --group        DEFAULT         group processes with the same name
+      --group-count                  display how many processes are in a given group
   -u, --ungroup                      ungroup processes with the same name //to be implemented
   -n,                DEFAULT n = 3   display at most top 'n' processes
   -a, --all                          display all processes

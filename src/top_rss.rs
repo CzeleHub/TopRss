@@ -12,7 +12,7 @@
 
 use std::{collections::HashMap, fs::ReadDir, path::PathBuf};
 
-pub fn toprss(_ungroup: bool, layout: Layout, how_many: usize, unit: Unit) {
+pub fn toprss(_ungroup: bool, group_count: bool, layout: Layout, how_many: usize, unit: Unit) {
     let path = PathBuf::from("/proc");
     match std::fs::read_dir(&path) {
         Ok(proc) => {
@@ -38,7 +38,7 @@ pub fn toprss(_ungroup: bool, layout: Layout, how_many: usize, unit: Unit) {
 
             let procs = procs.into_iter().rev().collect::<Vec<(u32, Process)>>();
 
-            display_processes(procs, how_many, layout);
+            display_processes(procs, group_count, how_many, layout);
         }
         Err(err) => {
             eprintln!("ERROR: {}", err);
@@ -102,10 +102,27 @@ fn try_new_process(content: String, unit: Unit) -> Option<Process> {
     }
 }
 
-fn display_processes(collection: Vec<(u32, Process)>, how_many: usize, layout: Layout) {
+fn display_processes(
+    collection: Vec<(u32, Process)>,
+    group_count: bool,
+    how_many: usize,
+    layout: Layout,
+) {
     collection.iter().take(how_many).for_each(|p| match layout {
-        Layout::Lines => println!("{}", p.1),
-        Layout::Line => print!("{} ", p.1),
+        Layout::Lines => {
+            if group_count {
+                println!("[{}]{}", p.0, p.1)
+            } else {
+                println!("{}", p.1)
+            }
+        }
+        Layout::Line => {
+            if group_count {
+                print!("[{}]{} ", p.0, p.1)
+            } else {
+                print!("{} ", p.1)
+            }
+        }
     });
     if matches!(layout, Layout::Line) {
         println!()
