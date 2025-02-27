@@ -1,4 +1,4 @@
-# TopRSS
+# TopRSS 0.1
 
 Linux Command line utility for printing top **VmRSS** processes
 
@@ -22,9 +22,6 @@ goes through all processes that are in the /proc directory,
 then keeps the ones that have both name and VmRSS information in status file,
 
 and then groups all processes with the same name.
-
-There is going to be an option to ungroup those in the future
-if You wish to use that, although **I** don't find it useful in my usecase.
 
 Currently **toprss** has this options (You can also see them by running `toprss --help`)
 ```
