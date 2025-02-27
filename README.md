@@ -62,7 +62,7 @@ You can now run it. just go to target/release and run toprss
 
 # Future plans
 todo:
- - add ungroup option (does not group processes with the same name)
+ - ~~add ungroup option (does not group processes with the same name)~~ IMPLEMENTED
  - add intelligent option (displays usage in appropriate unit based on individual process VmRSS size)
  - add option to color the output
  - add options to customize coloring, color diffrent parts of the output, color based on some conditions
