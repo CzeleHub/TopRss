@@ -20,7 +20,7 @@ const VERSION: &str = "0.1";
 
 fn main() {
     let mut args: VecDeque<String> = std::env::args().collect();
-    let mut group_same_name: bool = true;
+    let mut do_not_group: bool = false;
     let mut how_many: usize = 3;
     let mut layout: Layout = Layout::Line;
     let mut unit: Unit = Unit::MB;
@@ -40,8 +40,8 @@ fn main() {
                 println!("TopRSS version: {VERSION}");
                 return;
             }
-            "u" | "--unmerge" => {
-                group_same_name = false;
+            "-u" | "--ungroup" => {
+                do_not_group = true;
             }
             "-n" => {
                 let expected_number = args_iter.next();
@@ -93,7 +93,7 @@ fn main() {
         return;
     }
 
-    top_rss::toprss(group_same_name, show_group_count, layout, how_many, unit);
+    top_rss::toprss(do_not_group, show_group_count, layout, how_many, unit);
 }
 
 fn help() {
@@ -111,7 +111,7 @@ options:
   -v, --version                      display program's version and exit
   -g, --group        DEFAULT         group processes with the same name
       --group-count                  display how many processes are in a given group
-  -u, --ungroup                      ungroup processes with the same name //to be implemented
+  -u, --ungroup                      ungroup processes with the same name
   -n,                DEFAULT n = 3   display at most top 'n' processes
   -a, --all                          display all processes
   -o, --line         DEFAULT         display processes in one line 
