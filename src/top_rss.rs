@@ -126,14 +126,14 @@ fn display_processes_grouped(
     collection.iter().take(how_many).for_each(|p| match layout {
         Layout::Lines => {
             if group_count {
-                println!("[{}]{}", p.0, p.1)
+                println!("[{}] {}", p.0, p.1)
             } else {
                 println!("{}", p.1)
             }
         }
         Layout::Line => {
             if group_count {
-                print!("[{}]{} ", p.0, p.1)
+                print!("[{}] {} ", p.0, p.1)
             } else {
                 print!("{} ", p.1)
             }
