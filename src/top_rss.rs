@@ -12,7 +12,13 @@
 
 use std::{collections::HashMap, fs::ReadDir, path::PathBuf};
 
-pub fn toprss(do_not_group: bool, group_count: bool, layout: Layout, how_many: usize, unit: Unit) {
+pub fn toprss(
+    do_not_group: bool,
+    group_count: bool,
+    layout: Layout,
+    how_many: usize,
+    unit: Option<Unit>,
+) {
     let path = PathBuf::from("/proc");
     match std::fs::read_dir(&path) {
         Ok(proc) => {
@@ -52,7 +58,7 @@ pub fn toprss(do_not_group: bool, group_count: bool, layout: Layout, how_many: u
     };
 }
 
-fn get_processes(dir: ReadDir, unit: Unit) -> Vec<Process> {
+fn get_processes(dir: ReadDir, unit: Option<Unit>) -> Vec<Process> {
     dir.filter_map(|result| match result {
         Ok(dir_entry) => match dir_entry.file_type() {
             Ok(ftype) => {
@@ -86,22 +92,25 @@ fn get_processes(dir: ReadDir, unit: Unit) -> Vec<Process> {
     .collect::<Vec<Process>>()
 }
 
-fn try_new_process(content: String, unit: Unit) -> Option<Process> {
+fn try_new_process(content: String, unit: Option<Unit>) -> Option<Process> {
     let name_option = content.lines().find(|line| line.starts_with("Name:"));
     let rss_option = content.lines().find(|line| line.starts_with("VmRSS:"));
     if let Some(name) = name_option {
-        rss_option.map(|rss| Process {
-            name: name.to_owned().split_off(6),
-            rss: kB {
-                kB: rss
-                    .to_owned()
-                    .split_whitespace()
-                    .nth(1)
-                    .unwrap()
-                    .parse::<usize>()
-                    .unwrap(),
-            },
-            unit,
+        rss_option.map(|rss| {
+            #[allow(non_snake_case)]
+            let kB = rss
+                .to_owned()
+                .split_whitespace()
+                .nth(1)
+                .unwrap()
+                .parse::<usize>()
+                .unwrap();
+
+            Process {
+                name: name.to_owned().split_off(6),
+                rss: kB { kB },
+                unit,
+            }
         })
     } else {
         None
@@ -153,20 +162,25 @@ fn display_processes_ungrouped(collection: Vec<Process>, how_many: usize, layout
 struct Process {
     name: String,
     rss: kB,
-    unit: Unit,
+    unit: Option<Unit>,
 }
 
 impl std::fmt::Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(
-            format!(
-                "{}: {} {}",
-                self.name,
-                self.unit.convert(self.rss),
-                self.unit
-            )
-            .as_str(),
-        )
+        let unit = match self.unit {
+            Some(u) => u,
+            None => {
+                if self.rss.kB < 1024 {
+                    Unit::kB
+                } else if self.rss.kB / 1024 < 1024 {
+                    Unit::MB
+                } else {
+                    Unit::GB
+                }
+            }
+        };
+
+        f.write_str(format!("{}: {} {}", self.name, unit.convert(self.rss), unit).as_str())
     }
 }
 

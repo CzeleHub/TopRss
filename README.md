@@ -36,8 +36,9 @@ options:
   -o, --line         DEFAULT         display processes in one line 
   -l, --lines                        display each process on separate line
       --kb                           display VmRSS usage in kB
-      --mb           DEFAULT         display VmRSS usage in MB
+      --mb                           display VmRSS usage in MB
       --gb                           display VmRSS usage in GB
+  -s, --smart        DEFAULT         display VmRSS usage in appropriate unit ( kB if vmrss < MB, MB if vmrss < GB, else GB )
 ```
 
 Since this program is still not officially released with 1.0 version, ***all those options and the way they work might be a subject to change***
@@ -63,7 +64,7 @@ You can now run it. just go to target/release and run toprss
 # Future plans
 todo:
  - ~~add ungroup option (does not group processes with the same name)~~ IMPLEMENTED
- - add intelligent option (displays usage in appropriate unit based on individual process VmRSS size)
+ - ~~add intelligent option (displays usage in appropriate unit based on individual process VmRSS size)~~ IMPLEMENTED
  - add option to color the output
  - add options to customize coloring, color diffrent parts of the output, color based on some conditions
  - add option to print a separator between each printed process

@@ -23,7 +23,7 @@ fn main() {
     let mut do_not_group: bool = false;
     let mut how_many: usize = 3;
     let mut layout: Layout = Layout::Line;
-    let mut unit: Unit = Unit::MB;
+    let mut unit: Option<Unit> = None;
     let mut show_group_count: bool = false;
 
     let _self = args.pop_front();
@@ -72,15 +72,18 @@ fn main() {
             }
 
             "--kb" => {
-                unit = Unit::kB;
+                unit = Some(Unit::kB);
             }
 
             "--mb" => {
-                unit = Unit::MB;
+                unit = Some(Unit::MB);
             }
 
             "--gb" => {
-                unit = Unit::GB;
+                unit = Some(Unit::GB);
+            }
+            "-s" | "--smart" => {
+                unit = None;
             }
             _ => {
                 eprintln!("Error: Unknown argument '{arg}'");
@@ -117,9 +120,9 @@ options:
   -o, --line         DEFAULT         display processes in one line 
   -l, --lines                        display each process on separate line
       --kb                           display VmRSS usage in kB
-      --mb           DEFAULT         display VmRSS usage in MB
+      --mb                           display VmRSS usage in MB
       --gb                           display VmRSS usage in GB
-  -i, --intelligent                  display VmRSS usage in unit depending on size //to be implemented
+  -s, --smart        DEFAULT         display VmRSS usage in appropriate unit ( kB if vmrss < MB, MB if vmrss < GB, else GB )
 
     "#
     )
