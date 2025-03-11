@@ -26,6 +26,7 @@ fn main() {
     let mut unit: Option<Unit> = None;
     let mut show_group_count: bool = false;
 
+    // First argument is a program name. We do not need it
     let _self = args.pop_front();
 
     let mut args_iter = args.iter();
@@ -58,7 +59,9 @@ fn main() {
                     return;
                 }
             }
-            "--group" => {} // since its the default behaviour there is nothing to do
+            "--group" => {
+                do_not_group = false;
+            }
             "--lines" => {
                 layout = Layout::Lines;
             }
