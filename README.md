@@ -7,7 +7,7 @@ This program was designed in mind with integration to status bars like [WayBar](
 # Usage
 
 As of right now, simply running **toprss** (in terminal) without any options gives a result alike to this one:
-`Isolated Web Co: 2465 MB codium: 1507 MB firefox: 1130 MB` 
+`Isolated Web Co: 2.02 GB codium: 1.54 GB firefox: 983 MB` 
 
 By default it prints 3 top VmRSS consuming processes from /proc directory in appropriate unit(see --smart option in --help for details).
 
