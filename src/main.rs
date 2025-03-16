@@ -10,10 +10,11 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::VecDeque;
+use std::{collections::VecDeque, path::Path};
 
 use top_rss::{Layout, Unit};
 
+mod tests;
 mod top_rss;
 
 const VERSION: &str = "0.1";
@@ -99,7 +100,14 @@ fn main() {
         return;
     }
 
-    top_rss::toprss(do_not_group, show_group_count, layout, how_many, unit);
+    top_rss::toprss(
+        do_not_group,
+        show_group_count,
+        layout,
+        how_many,
+        unit,
+        Path::new("/proc"),
+    );
 }
 
 fn help() {

@@ -10,7 +10,7 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{collections::HashMap, fs::ReadDir, path::PathBuf};
+use std::{collections::HashMap, fs::ReadDir, path::Path};
 
 pub fn toprss(
     do_not_group: bool,
@@ -18,9 +18,9 @@ pub fn toprss(
     layout: Layout,
     how_many: usize,
     unit: Option<Unit>,
+    path: &Path,
 ) {
-    let path = PathBuf::from("/proc");
-    match std::fs::read_dir(&path) {
+    match std::fs::read_dir(path) {
         Ok(proc) => {
             if do_not_group {
                 let mut procs = get_processes(proc, unit);
