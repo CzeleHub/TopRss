@@ -10,11 +10,13 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{collections::VecDeque, path::Path};
+use std::{
+    collections::VecDeque,
+    path::PathBuf,
+};
 
 use top_rss::{Layout, Unit};
 
-mod tests;
 mod top_rss;
 
 const VERSION: &str = "0.1";
@@ -26,6 +28,7 @@ fn main() {
     let mut layout: Layout = Layout::Line;
     let mut unit: Option<Unit> = None;
     let mut show_group_count: bool = false;
+    let mut path: PathBuf = PathBuf::from("/proc");
 
     // First argument is a program name. We do not need it
     let _self = args.pop_front();
@@ -89,6 +92,23 @@ fn main() {
             "-s" | "--smart" => {
                 unit = None;
             }
+
+            "--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-purpose" => {
+                let expected_new_proc_path = args_iter.next();
+                if let Some(p) = expected_new_proc_path {
+                    let new_path = PathBuf::from(p);
+                    if new_path.exists() {
+                        path = new_path;
+                    } else {
+                        eprintln!("Error: Path '{}' does not exists",new_path.display());
+                            return;
+                    }
+                    
+                } else {
+                    eprintln!("Error: found option '--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-purpose', but no path was provided");
+                    return;
+                }
+            }
             _ => {
                 eprintln!("Error: Unknown argument '{arg}'");
                 return;
@@ -100,14 +120,7 @@ fn main() {
         return;
     }
 
-    top_rss::toprss(
-        do_not_group,
-        show_group_count,
-        layout,
-        how_many,
-        unit,
-        Path::new("/proc"),
-    );
+    top_rss::toprss(do_not_group, show_group_count, layout, how_many, unit, path);
 }
 
 fn help() {
