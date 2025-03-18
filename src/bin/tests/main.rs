@@ -86,8 +86,8 @@ fn main() -> Result<(), std::io::Error> {
             "Ala: 8.58 GB CatOwnsAla: 887 MB OwnsA: 878 MB Cat: 87 MB \n",
         ),
         (
-            vec!["-n", ""],
-            "Error: Could not parse '' into unsigned integer\n",
+            vec!["-n"],
+            "Error: found option '-n', but no number was provided\n",
         ),
         (
             vec!["-n", "--help"],
@@ -101,7 +101,8 @@ fn main() -> Result<(), std::io::Error> {
 
     // run program with different args
     for arg in test_args {
-        perform_test(&path_to_toprss, arg);
+        let result = perform_test(&path_to_toprss, arg);
+        println!("{result}");
     }
 
     // remove dummy directory directory
@@ -146,7 +147,7 @@ fn remove_dummy_directory() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn perform_test(program: &str, test: (Vec<&str>, &str)) {
+fn perform_test(program: &str, test: (Vec<&str>, &str)) -> String {
     let mut toprss = std::process::Command::new(program);
     let toprss = toprss
         .arg("--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-purpose")
@@ -175,11 +176,14 @@ fn perform_test(program: &str, test: (Vec<&str>, &str)) {
     } else {
         output
     };
-    // let out = String::from_utf8(out.stdout)
-    //     .expect("Error: Failed to convert Vec<u8, Global> into utf8 String");
 
-    print!("arg: {:?} \t ...", test.0);
-    assert_eq!(out, test.1);
-    println!("passed");
-    //println!("{out}");
+    if out.eq(test.1) {
+        format!("\x1b[32m[PASS]\x1b[0m\targ: {:?}", test.0)
+    } else {
+        let status = format!("\x1b[31m[FAIL]\x1b[0m\targ: {:?}", test.0);
+        format!(
+            "{status}\n\t\x1b[31m> Result:\x1b[0m\t{:?}\n\t\x1b[31m> Expected:\x1b[0m\t{:?}",
+            out, test.1
+        )
+    }
 }
