@@ -13,17 +13,41 @@
 use std::{collections::VecDeque, io::Write};
 
 const PROC_DIR: &str = "/tmp/toprss/dummy_proc";
-const PROC_SUBDIR_1: &str = "/tmp/toprss/dummy_proc/1";
-const PROC_SUBDIR_2: &str = "/tmp/toprss/dummy_proc/2";
-const PROC_SUBDIR_3: &str = "/tmp/toprss/dummy_proc/3";
-const PROC_SUBDIR_4: &str = "/tmp/toprss/dummy_proc/4";
-const PROC_SUBDIR_5: &str = "/tmp/toprss/dummy_proc/5";
+const PROC_SUBDIRS: [&str; 5] = [
+    "/tmp/toprss/dummy_proc/1",
+    "/tmp/toprss/dummy_proc/2",
+    "/tmp/toprss/dummy_proc/3",
+    "/tmp/toprss/dummy_proc/4",
+    "/tmp/toprss/dummy_proc/5",
+];
 
-const PROC_SUBDIR_STATUS_1: &str = "/tmp/toprss/dummy_proc/1/status";
-const PROC_SUBDIR_STATUS_2: &str = "/tmp/toprss/dummy_proc/2/status";
-const PROC_SUBDIR_STATUS_3: &str = "/tmp/toprss/dummy_proc/3/status";
-const PROC_SUBDIR_STATUS_4: &str = "/tmp/toprss/dummy_proc/4/status";
-const PROC_SUBDIR_STATUS_5: &str = "/tmp/toprss/dummy_proc/5/status";
+const PROC_SUBDIRS_STATUSES: [(&str, &str, &str); 5] = [
+    (
+        "/tmp/toprss/dummy_proc/1/status",
+        "Name:\tAla",
+        "VmRSS:\t9000000 kB",
+    ),
+    (
+        "/tmp/toprss/dummy_proc/2/status",
+        "Name:\tOwnsA",
+        "VmRSS:\t900000 kB",
+    ),
+    (
+        "/tmp/toprss/dummy_proc/3/status",
+        "Name:\tCat",
+        "VmRSS:\t90000",
+    ),
+    (
+        "/tmp/toprss/dummy_proc/4/status",
+        "Name:\tCatOwnsAla",
+        "VmRSS:\t9000 kB",
+    ),
+    (
+        "/tmp/toprss/dummy_proc/5/status",
+        "Name:\tCatOwnsAla",
+        "VmRSS:\t900000 kB",
+    ),
+];
 
 fn main() -> Result<(), std::io::Error> {
     // remove a dummy directory if it already exists
@@ -112,31 +136,16 @@ fn main() -> Result<(), std::io::Error> {
 
 fn create_dummy_directory() -> Result<(), std::io::Error> {
     std::fs::create_dir_all(PROC_DIR)?;
-    std::fs::create_dir_all(PROC_SUBDIR_1)?;
-    std::fs::create_dir_all(PROC_SUBDIR_2)?;
-    std::fs::create_dir_all(PROC_SUBDIR_3)?;
-    std::fs::create_dir_all(PROC_SUBDIR_4)?;
-    std::fs::create_dir_all(PROC_SUBDIR_5)?;
 
-    let mut f1 = std::fs::File::create_new(PROC_SUBDIR_STATUS_1)?;
-    writeln!(f1, "Name:\tAla")?;
-    writeln!(f1, "VmRSS:\t9000000 kB")?;
+    for subdir in PROC_SUBDIRS {
+        std::fs::create_dir_all(subdir)?;
+    }
 
-    let mut f2 = std::fs::File::create_new(PROC_SUBDIR_STATUS_2)?;
-    writeln!(f2, "Name:\tOwnsA")?;
-    writeln!(f2, "VmRSS:\t900000 kB")?;
-
-    let mut f3 = std::fs::File::create_new(PROC_SUBDIR_STATUS_3)?;
-    writeln!(f3, "Name:\tCat")?;
-    writeln!(f3, "VmRSS:\t90000")?;
-
-    let mut f4 = std::fs::File::create_new(PROC_SUBDIR_STATUS_4)?;
-    writeln!(f4, "Name:\tCatOwnsAla")?;
-    writeln!(f4, "VmRSS:\t9000 kB")?;
-
-    let mut f5 = std::fs::File::create_new(PROC_SUBDIR_STATUS_5)?;
-    writeln!(f5, "Name:\tCatOwnsAla")?;
-    writeln!(f5, "VmRSS:\t900000 kB")?;
+    for status in PROC_SUBDIRS_STATUSES {
+        let mut file = std::fs::File::create_new(status.0)?;
+        writeln!(file, "{}", status.1)?;
+        writeln!(file, "{}", status.2)?;
+    }
 
     Ok(())
 }
