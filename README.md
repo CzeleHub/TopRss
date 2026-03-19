@@ -1,12 +1,12 @@
-# TopRSS 0.1
+# Toppss 0.1
 
-Linux Command line utility for printing top **VmRSS** processes
+Linux Command line utility for printing top **PSS** (smaps_rollup) processes
 
 This program was designed in mind with integration to status bars like [WayBar](https://github.com/Alexays/Waybar/) or Gnome Top Bar with [Executor](https://extensions.gnome.org/extension/2932/executor/)
 
 # Usage
 
-As of right now, simply running **toprss** (in terminal) without any options gives a result alike to this one:
+As of right now, simply running **toppss** (in terminal) without any options gives a result alike to this one:
 `Isolated Web Co: 2.02 GB codium: 1.54 GB firefox: 983 MB` 
 
 By default it prints 3 top VmRSS consuming processes from /proc directory in appropriate unit(see --smart option in --help for details).
@@ -15,7 +15,7 @@ Well, the above sentence is actually a lie!!!
 
 To be technically correct, the best kind of correct,
 
-what really happens is that by default **toprss**
+what really happens is that by default **toppss**
 
 goes through all processes that are in the /proc directory,
 
@@ -23,7 +23,7 @@ then keeps the ones that have both name and VmRSS information in status file,
 
 and then groups all processes with the same name.
 
-Currently **toprss** has these options (You can also see them by running `toprss --help`)
+Currently **toppss** has these options (You can also see them by running `toppss --help`)
 ```
 options:
   -h, --help, -H, -?                 display this help message and exit
@@ -52,14 +52,14 @@ To compile (on linux) follow these steps:
 1. [install rust](https://www.rust-lang.org/tools/install)
 2. Clone the repository
 ```
-git clone https://github.com/CzeleHub/TopRss.git
+git clone https://github.com/CzeleHub/toppss.git
 ```
 3. Compile
 ```
-cargo build --release
+cargo build --release --bin toppss
 ```
 
-You can now run it. just go to target/release and run toprss
+You can now run it. just go to target/release and run toppss
 
 # Future plans
 todo:
