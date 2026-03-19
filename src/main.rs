@@ -15,19 +15,19 @@ use std::{
     path::PathBuf,
 };
 
-use top_rss::{Layout, Unit};
+use top_pss::{Layout, Unit};
 
-mod top_rss;
+mod top_pss;
 
-const VERSION: &str = "0.1";
+const VERSION: &str = "0.4";
 
 fn main() {
     let mut args: VecDeque<String> = std::env::args().collect();
-    let mut do_not_group: bool = false;
-    let mut how_many: usize = 3;
-    let mut layout: Layout = Layout::Line;
+    let mut ungroup: bool = false;
+    let mut n_processess: usize = 3;
+    let mut separator: Layout = Layout::Line;
     let mut unit: Option<Unit> = None;
-    let mut show_group_count: bool = false;
+    let mut group_count: bool = false;
     let mut path: PathBuf = PathBuf::from("/proc");
 
     // First argument is a program name. We do not need it
@@ -46,13 +46,13 @@ fn main() {
                 return;
             }
             "-u" | "--ungroup" => {
-                do_not_group = true;
+                ungroup = true;
             }
             "-n" => {
                 let expected_number = args_iter.next();
                 if let Some(number) = expected_number {
                     match number.parse::<usize>() {
-                        Ok(n) => how_many = n,
+                        Ok(n) => n_processess = n,
                         Err(_) => {
                             eprintln!("Error: Could not parse '{number}' into unsigned integer");
                             return;
@@ -63,19 +63,16 @@ fn main() {
                     return;
                 }
             }
-            "--group" => {
-                do_not_group = false;
-            }
             "--lines" => {
-                layout = Layout::Lines;
+                separator = Layout::Lines;
             }
 
             "-a" | "--all" => {
-                how_many = usize::MAX;
+                n_processess = usize::MAX;
             }
 
             "--group-count" => {
-                show_group_count = true;
+                group_count = true;
             }
 
             "--kb" => {
@@ -89,11 +86,8 @@ fn main() {
             "--gb" => {
                 unit = Some(Unit::GB);
             }
-            "-s" | "--smart" => {
-                unit = None;
-            }
 
-            "--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-purpose" => {
+            "--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason" => {
                 let expected_new_proc_path = args_iter.next();
                 if let Some(p) = expected_new_proc_path {
                     let new_path = PathBuf::from(p);
@@ -105,7 +99,7 @@ fn main() {
                     }
                     
                 } else {
-                    eprintln!("Error: found option '--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-purpose', but no path was provided");
+                    eprintln!("Error: found option '--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason', but no path was provided");
                     return;
                 }
             }
@@ -116,11 +110,11 @@ fn main() {
         }
     }
 
-    if how_many == 0 {
+    if n_processess == 0 {
         return;
     }
 
-    top_rss::toprss(do_not_group, show_group_count, layout, how_many, unit, path);
+    top_pss::toprss(ungroup, group_count, separator, n_processess, unit, path);
 }
 
 fn help() {
@@ -128,26 +122,22 @@ fn help() {
         r#"
 TopRSS version: {VERSION}
         usage:
-            toprss
-            toprss [options]
+            toppss
+            toppss [options]
 
-Command line utility for printing top VmRSS processes
+Command line utility for printing top ram processes
 
 options:
   -h, --help, -H, -?                 display this help message and exit
   -v, --version                      display program's version and exit
-  -g, --group        DEFAULT         group processes with the same name
-      --group-count                  display how many processes are in a given group
+      --group-count                  display quantity of grouped processes
   -u, --ungroup                      ungroup processes with the same name
   -n,                DEFAULT n = 3   display at most top 'n' processes
-  -a, --all                          display all processes
-  -o, --line         DEFAULT         display processes in one line 
+  -a, --all                          display all processes 
   -l, --lines                        display each process on separate line
-      --kb                           display VmRSS usage in kB
-      --mb                           display VmRSS usage in MB
-      --gb                           display VmRSS usage in GB
-  -s, --smart        DEFAULT         display VmRSS usage in appropriate unit ( kB if vmrss < MB, MB if vmrss < GB, else GB )
-
+      --kb                           display ram usage in kB
+      --mb                           display ram usage in MB
+      --gb                           display ram usage in GB
     "#
     )
 }

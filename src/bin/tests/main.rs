@@ -67,6 +67,7 @@ fn main() -> Result<(), std::io::Error> {
             vec!["--all"],
             "Ala: 8.58 GB CatOwnsAla: 887 MB OwnsA: 878 MB Cat: 87 MB \n",
         ),
+        (vec!["--all", "-n", "2"], "DONT KNOW"),
         (
             vec!["--group-count"],
             "[1] Ala: 8.58 GB [2] CatOwnsAla: 887 MB [1] OwnsA: 878 MB \n",
@@ -75,6 +76,7 @@ fn main() -> Result<(), std::io::Error> {
             vec!["--ungroup"],
             "Ala: 8.58 GB OwnsA: 878 MB CatOwnsAla: 878 MB \n",
         ),
+        (vec!["--group-count", "--ungroup"], "DONT KNOW"),
         (
             vec!["--lines"],
             "Ala: 8.58 GB\nCatOwnsAla: 887 MB\nOwnsA: 878 MB\n",
@@ -159,7 +161,7 @@ fn remove_dummy_directory() -> Result<(), std::io::Error> {
 fn perform_test(program: &str, test: (Vec<&str>, &str)) -> String {
     let mut toprss = std::process::Command::new(program);
     let toprss = toprss
-        .arg("--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-purpose")
+        .arg("--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason")
         .arg(PROC_DIR);
 
     let toprss = if test.0.len() > 1 {
