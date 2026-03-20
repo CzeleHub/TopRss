@@ -18,44 +18,38 @@ use std::{
 };
 
 pub fn toprss(
-    ungroup: bool,
+    collapse: bool,
     group_count: bool,
-    separator: Layout,
+    separator: Separator,
     how_many: usize,
     unit: Option<Unit>,
     path: PathBuf,
 ) {
     match std::fs::read_dir(path) {
         Ok(proc) => {
-            let mut procs = get_processes(proc)
-                .into_iter()
-                .map(|p| (1, p))
-                .collect::<Vec<(u32, Process)>>();
+            let mut procs = get_processes(proc);
 
-            if !ungroup {
-                let mut combined: HashMap<String, (u32, Process)> = HashMap::new();
-                let procs_iter = procs.into_iter();
-                for p in procs_iter {
-                    if let Some(item) = combined.get_mut(p.1.name.as_str()) {
-                        item.0 += 1;
-                        item.1.kB += p.1.kB;
+            if collapse {
+                let mut collapsed: HashMap<(usize, String), Process> = HashMap::new();
+
+                for process in procs.into_iter() {
+                    if let Some(existing_process) =
+                        collapsed.get_mut(&(process.ppid, process.name.clone()))
+                    {
+                        existing_process.kB += process.kB;
                     } else {
-                        combined.insert(p.1.name.clone(), (1, p.1));
+                        collapsed.insert((process.ppid, process.name.clone()), process);
                     }
                 }
 
-                procs = combined
+                procs = collapsed
                     .into_values()
-                    .map(|v| (v.0, v.1))
-                    .collect::<Vec<(u32, Process)>>();
+                    //.map(|v| (v.0, v.1))
+                    .collect::<Vec<Process>>();
             }
 
-            procs.sort_by(|p1, p2| p1.1.kB.cmp(&p2.1.kB));
-            procs = procs.into_iter().rev().collect::<Vec<(u32, Process)>>();
-
-            // let mut total: usize = 0;
-            // procs.iter().for_each(|p| total += p.1.kB);
-            // println!("{}/16G", Unit::GB.string(total));
+            procs.sort_by(|p1, p2| p1.kB.cmp(&p2.kB));
+            procs = procs.into_iter().rev().collect::<Vec<Process>>();
 
             display_processes(procs, how_many, group_count, unit, separator);
         }
@@ -66,15 +60,15 @@ pub fn toprss(
 }
 
 fn get_processes(dir: ReadDir) -> Vec<Process> {
-    dir.filter_map(|result| match result {
-        Ok(dir_entry) => dir_entry.file_name().as_bytes().first().and_then(|byte| {
-            if byte.is_ascii_digit() {
-                Some(dir_entry)
-            } else {
-                None
-            }
-        }),
-        Err(_) => None,
+    dir.filter_map(|result| {
+        if let Ok(dir_entry) = result
+            && let Some(byte) = dir_entry.file_name().as_bytes().first()
+            && byte.is_ascii_digit()
+        {
+            Some(dir_entry)
+        } else {
+            None
+        }
     })
     .collect::<Vec<DirEntry>>()
     .iter()
@@ -97,64 +91,62 @@ fn get_processes(dir: ReadDir) -> Vec<Process> {
 #[allow(non_snake_case)]
 fn try_new_process(status: &str, smaps_rollup: &str) -> Option<Process> {
     let name_option = status.lines().find(|line| line.starts_with("Name:"));
+    let ppid_option = status.lines().find(|line| line.starts_with("PPid:"));
     let pss_option = smaps_rollup.lines().find(|line| line.starts_with("Pss:"));
 
-    if let Some(name) = name_option
+    if let Some(str_name) = name_option
+        && let name = str_name.to_owned().split_off(6)
+        && let Some(str_ppid) = ppid_option
+        && let Some(str_val_ppid) = str_ppid.split_whitespace().nth(1)
+        && let Ok(ppid) = str_val_ppid.parse::<usize>()
         && let Some(pss) = pss_option
-        && let Some(str_kB) = pss.to_owned().split_whitespace().nth(1)
+        && let Some(str_kB) = pss.split_whitespace().nth(1)
         && let Ok(kB) = str_kB.parse::<usize>()
     {
-        Some(Process {
-            name: name.to_owned().split_off(6),
-            kB,
-        })
+        Some(Process { ppid, name, kB })
     } else {
         None
     }
 }
 
 fn display_processes(
-    collection: Vec<(u32, Process)>,
+    collection: Vec<Process>,
     first_n_elements: usize,
     group_count: bool,
-    unit: Option<Unit>,
-    separator: Layout,
+    option_unit: Option<Unit>,
+    separator: Separator,
 ) {
     collection.iter().take(first_n_elements).for_each(|p| {
-        let size = if let Some(u) = unit {
-            u.string(p.1.kB)
-        } else if p.1.kB < 1024 {
-            Unit::kB.string(p.1.kB)
-        } else if p.1.kB / 1024 < 1024 {
-            Unit::MB.string(p.1.kB)
+        let size = if let Some(unit) = &option_unit {
+            unit.string(p.kB)
+        } else if p.kB < 1024 {
+            Unit::kB.string(p.kB)
+        } else if p.kB / 1024 < 1024 {
+            Unit::MB.string(p.kB)
         } else {
-            Unit::GB.string(p.1.kB)
+            Unit::GB.string(p.kB)
         };
         let output = if group_count {
-            format!("[{}] {} {}{}", p.0, p.1, size, separator)
+            // format!("[{}] {} {}{}", p.group_count, p, size, separator)
+            format!("TODO")
         } else {
-            format!("{} {}{}", p.1, size, separator)
+            format!("{} {} ppid: {}{}", p.name, size, p.ppid, separator)
         };
 
         print!("{output}");
     });
 }
 
-#[derive(Clone)]
+// #[derive(Clone)]
 #[allow(non_snake_case)]
 struct Process {
+    ppid: usize,
     name: String,
     pub kB: usize,
 }
 
-impl std::fmt::Display for Process {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.name.as_str())
-    }
-}
-
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
+// #[derive(Clone, Copy)]
 pub enum Unit {
     kB,
     MB,
@@ -178,18 +170,18 @@ impl Unit {
     }
 }
 
-pub enum Layout {
+pub enum Separator {
     Lines,
     Line,
     Other(String),
 }
 
-impl std::fmt::Display for Layout {
+impl std::fmt::Display for Separator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Layout::Line => f.write_str(" "),
-            Layout::Lines => f.write_str("\n"),
-            Layout::Other(string) => f.write_str(string),
+            Separator::Line => f.write_str(" "),
+            Separator::Lines => f.write_str("\n"),
+            Separator::Other(string) => f.write_str(string),
         }
     }
 }

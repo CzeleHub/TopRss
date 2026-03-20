@@ -10,12 +10,9 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{
-    collections::VecDeque,
-    path::PathBuf,
-};
+use std::{collections::VecDeque, path::PathBuf};
 
-use top_pss::{Layout, Unit};
+use top_pss::{Separator, Unit};
 
 mod top_pss;
 
@@ -23,11 +20,11 @@ const VERSION: &str = "0.4";
 
 fn main() {
     let mut args: VecDeque<String> = std::env::args().collect();
-    let mut ungroup: bool = false;
+    let mut collapse: bool = true;
     let mut n_processess: usize = 3;
-    let mut separator: Layout = Layout::Line;
+    let mut separator: Separator = Separator::Line;
     let mut unit: Option<Unit> = None;
-    let mut group_count: bool = false;
+    let mut show_group_count: bool = false;
     let mut path: PathBuf = PathBuf::from("/proc");
 
     // First argument is a program name. We do not need it
@@ -42,11 +39,11 @@ fn main() {
                 return;
             }
             "-v" | "--version" => {
-                println!("TopRSS version: {VERSION}");
+                println!("Toppss version: {VERSION}");
                 return;
             }
             "-u" | "--ungroup" => {
-                ungroup = true;
+                collapse = false;
             }
             "-n" => {
                 let expected_number = args_iter.next();
@@ -64,7 +61,7 @@ fn main() {
                 }
             }
             "--lines" => {
-                separator = Layout::Lines;
+                separator = Separator::Lines;
             }
 
             "-a" | "--all" => {
@@ -72,7 +69,7 @@ fn main() {
             }
 
             "--group-count" => {
-                group_count = true;
+                show_group_count = true;
             }
 
             "--kb" => {
@@ -87,19 +84,21 @@ fn main() {
                 unit = Some(Unit::GB);
             }
 
-            "--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason" => {
+            "--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason" =>
+            {
                 let expected_new_proc_path = args_iter.next();
                 if let Some(p) = expected_new_proc_path {
                     let new_path = PathBuf::from(p);
                     if new_path.exists() {
                         path = new_path;
                     } else {
-                        eprintln!("Error: Path '{}' does not exists",new_path.display());
-                            return;
+                        eprintln!("Error: Path '{}' does not exists", new_path.display());
+                        return;
                     }
-                    
                 } else {
-                    eprintln!("Error: found option '--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason', but no path was provided");
+                    eprintln!(
+                        "Error: found option '--run-tests-this-option-is-hidden-and-intended-to-be-used-to-perform-tests-by-developer-this-option-name-is-annoingly-long-for-a-reason', but no path was provided"
+                    );
                     return;
                 }
             }
@@ -114,13 +113,20 @@ fn main() {
         return;
     }
 
-    top_pss::toprss(ungroup, group_count, separator, n_processess, unit, path);
+    top_pss::toprss(
+        collapse,
+        show_group_count,
+        separator,
+        n_processess,
+        unit,
+        path,
+    );
 }
 
 fn help() {
     println!(
         r#"
-TopRSS version: {VERSION}
+Toppss version: {VERSION}
         usage:
             toppss
             toppss [options]
@@ -131,7 +137,7 @@ options:
   -h, --help, -H, -?                 display this help message and exit
   -v, --version                      display program's version and exit
       --group-count                  display quantity of grouped processes
-  -u, --ungroup                      ungroup processes with the same name
+  -c, --uncollapse                   uncollapse processes with the same name
   -n,                DEFAULT n = 3   display at most top 'n' processes
   -a, --all                          display all processes 
   -l, --lines                        display each process on separate line
